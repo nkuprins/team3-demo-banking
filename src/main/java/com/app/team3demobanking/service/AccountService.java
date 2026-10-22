@@ -3,7 +3,6 @@ package com.app.team3demobanking.service;
 import com.app.team3demobanking.model.Account;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Locale;
 import java.util.Map;
@@ -22,7 +21,7 @@ public class AccountService {
 
     public Account createAccount(String ownerName) {
         Long id = nextId.getAndIncrement();
-        Account account = new Account(id, generateDemoIban(id), ownerName, BigDecimal.ZERO);
+        Account account = new Account(id, generateDemoIban(id), ownerName);
         accounts.put(id, account);
         return account;
     }
