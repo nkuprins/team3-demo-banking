@@ -28,15 +28,8 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(InvalidTransferException.class)
-    public ResponseEntity<ErrorResponse> handleInvalidTransfer(
-            InvalidTransferException ex) {
-
-        ErrorResponse body = new ErrorResponse(
-                400, ex.getMessage());
-
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(body);
+    public ResponseEntity<ErrorResponse> handleInvalidTransfer(InvalidTransferException ex) {
+        return error(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)

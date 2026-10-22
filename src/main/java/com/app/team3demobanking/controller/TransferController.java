@@ -32,14 +32,7 @@ public class TransferController {
         );
 
         List<TransactionResponse> response = transactions.stream()
-                .map(transaction -> new TransactionResponse(
-                        transaction.getId(),
-                        transaction.getAccount().getId(),
-                        transaction.getType(),
-                        transaction.getAmount(),
-                        transaction.getCreatedAt(),
-                        transaction.getNote()
-                ))
+                .map(TransactionResponse::from)
                 .toList();
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
