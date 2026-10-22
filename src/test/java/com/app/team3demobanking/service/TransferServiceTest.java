@@ -1,14 +1,14 @@
 
 package com.app.team3demobanking.service;
 
+import com.app.team3demobanking.exception.InvalidTransferException;
+import com.app.team3demobanking.exception.NotFoundException;
 import com.app.team3demobanking.model.Account;
 import com.app.team3demobanking.model.Transaction;
 import com.app.team3demobanking.model.TransactionType;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -89,14 +89,14 @@ class TransferServiceTest {
 
     @Test
     void shouldRejectInsufficientBalance() {
-        ResponseStatusException exception = assertThrows(
-                ResponseStatusException.class,
+        InvalidTransferException exception = assertThrows(
+                InvalidTransferException.class,
                 () -> transferService.transfer(
                         1L, 2L,
                         new BigDecimal("600.00"), "Payment"));
 
-        assertEquals(HttpStatus.BAD_REQUEST,
-                exception.getStatusCode());
+        assertEquals("Insufficient balance",
+                exception.getMessage());
 
         assertEquals(
                 new BigDecimal("500.00"), sender.getBalance());
@@ -106,30 +106,42 @@ class TransferServiceTest {
 
     @Test
     void shouldRejectNegativeAmount() {
-        assertThrows(ResponseStatusException.class,
+        InvalidTransferException exception = assertThrows(
+                InvalidTransferException.class,
                 () -> transferService.transfer(
                         1L, 2L,
                         new BigDecimal("-50.00"), "Payment"));
+
+        assertEquals("Invalid transfer details",
+                exception.getMessage());
 
         verifyNoInteractions(transactionService);
     }
 
     @Test
     void shouldRejectZeroAmount() {
-        assertThrows(ResponseStatusException.class,
+        InvalidTransferException exception = assertThrows(
+                InvalidTransferException.class,
                 () -> transferService.transfer(
                         1L, 2L,
                         BigDecimal.ZERO, "Payment"));
+
+        assertEquals("Invalid transfer details",
+                exception.getMessage());
 
         verifyNoInteractions(transactionService);
     }
 
     @Test
     void shouldRejectSameAccountTransfer() {
-        assertThrows(ResponseStatusException.class,
+        InvalidTransferException exception = assertThrows(
+                InvalidTransferException.class,
                 () -> transferService.transfer(
                         1L, 1L,
                         new BigDecimal("100.00"), "Payment"));
+
+        assertEquals("Cannot transfer to the same account",
+                exception.getMessage());
 
         verifyNoInteractions(transactionService);
     }
@@ -139,14 +151,14 @@ class TransferServiceTest {
         when(accountService.findById(99L))
                 .thenReturn(Optional.empty());
 
-        ResponseStatusException exception = assertThrows(
-                ResponseStatusException.class,
+        NotFoundException exception = assertThrows(
+                NotFoundException.class,
                 () -> transferService.transfer(
                         1L, 99L,
                         new BigDecimal("100.00"), "Payment"));
 
-        assertEquals(HttpStatus.NOT_FOUND,
-                exception.getStatusCode());
+        assertEquals("Receiver account not found",
+                exception.getMessage());
 
         verifyNoInteractions(transactionService);
     }

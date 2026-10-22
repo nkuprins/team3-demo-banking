@@ -1,28 +1,24 @@
 
 package com.app.team3demobanking.service;
 
+import com.app.team3demobanking.exception.InvalidTransferException;
+import com.app.team3demobanking.exception.NotFoundException;
 import com.app.team3demobanking.model.Account;
 import com.app.team3demobanking.model.Transaction;
 import com.app.team3demobanking.model.TransactionType;
 
-import org.springframework.http.HttpStatus;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class TransferService {
 
     private final AccountService accountService;
     private final TransactionService transactionService;
-
-    public TransferService(AccountService accountService,
-                           TransactionService transactionService) {
-        this.accountService = accountService;
-        this.transactionService = transactionService;
-    }
 
     public synchronized List<Transaction> transfer(
             Long fromAccountId,
@@ -30,43 +26,46 @@ public class TransferService {
             BigDecimal amount,
             String note) {
 
-        // Validate transfer details
+        // Defensive validation for direct service calls
         if (fromAccountId == null || toAccountId == null
                 || amount == null || amount.signum() <= 0) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Invalid transfer details");
+            throw new InvalidTransferException(
+                    "Invalid transfer details");
         }
 
-        // Prevent transferring to the same account
+        // Prevent transfers to the same account
         if (fromAccountId.equals(toAccountId)) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
+            throw new InvalidTransferException(
                     "Cannot transfer to the same account");
         }
 
-        // Find sender and receiver accounts
+        // Find sender and receiver
         Account sender = accountService.findById(fromAccountId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Sender account not found"));
+                .orElseThrow(() -> new NotFoundException(
+                        "Sender account not found"));
 
         Account receiver = accountService.findById(toAccountId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Receiver account not found"));
+                .orElseThrow(() -> new NotFoundException(
+                        "Receiver account not found"));
 
         // Check available balance
         if (sender.getBalance().compareTo(amount) < 0) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Insufficient balance");
+            throw new InvalidTransferException(
+                    "Insufficient balance");
         }
 
-        // Update balances
-        sender.setBalance(sender.getBalance().subtract(amount));
-        receiver.setBalance(receiver.getBalance().add(amount));
+        // Update account balances
+        sender.setBalance(
+                sender.getBalance().subtract(amount));
 
-        // Record both sides of the transfer
+        receiver.setBalance(
+                receiver.getBalance().add(amount));
+
+        // Record outgoing transaction
         Transaction debit = transactionService.recordTransaction(
                 sender, TransactionType.DEBIT, amount, note);
 
+        // Record incoming transaction
         Transaction credit = transactionService.recordTransaction(
                 receiver, TransactionType.CREDIT, amount, note);
 

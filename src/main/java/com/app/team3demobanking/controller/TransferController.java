@@ -10,18 +10,15 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import lombok.RequiredArgsConstructor;
 import java.util.List;
 
 @RestController
 @RequestMapping("/transfer")
+@RequiredArgsConstructor
 public class TransferController {
 
     private final TransferService transferService;
-
-    public TransferController(TransferService transferService) {
-        this.transferService = transferService;
-    }
 
     @PostMapping
     public ResponseEntity<List<TransactionResponse>> transfer(

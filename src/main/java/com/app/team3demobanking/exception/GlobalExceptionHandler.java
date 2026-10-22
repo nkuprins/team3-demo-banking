@@ -25,4 +25,17 @@ public class GlobalExceptionHandler {
         ErrorResponse body = new ErrorResponse(400, message);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
+
+    @ExceptionHandler(InvalidTransferException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidTransfer(
+            InvalidTransferException ex) {
+
+        ErrorResponse body = new ErrorResponse(
+                400, ex.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(body);
+    }
+
 }
