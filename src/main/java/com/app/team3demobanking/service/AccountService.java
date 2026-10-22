@@ -2,6 +2,7 @@ package com.app.team3demobanking.service;
 
 import com.app.team3demobanking.exception.NotFoundException;
 import com.app.team3demobanking.model.Account;
+import com.app.team3demobanking.model.Transaction;
 import com.app.team3demobanking.model.TransactionType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
@@ -31,17 +33,10 @@ public class AccountService {
     public Account createAccount(String ownerName, BigDecimal initialBalance) {
         Long id = nextId.getAndIncrement();
         Account account = new Account(id, generateDemoIban(id), ownerName);
-        accounts.put(id, account);
-
-        if (initialBalance != null) {
-            BigDecimal scaled = initialBalance.setScale(2, RoundingMode.UNNECESSARY);
-            account.setBalance(scaled);
-            if (scaled.signum() > 0) {
-                transactionService.recordTransaction(account, TransactionType.CREDIT, scaled, "Initinal balance");
-            }
-
+        if (initialBalance != null && initialBalance.signum() > 0) {
+            deposit(account, initialBalance, "Initial balance");
         }
-
+        accounts.put(id, account);
         return account;
     }
 
@@ -51,6 +46,23 @@ public class AccountService {
 
     public Account getById(Long id) {
         return findById(id).orElseThrow(() -> new NotFoundException("Account not found"));
+    }
+
+    public List<Transaction> getTransactions(Long accountId) {
+        return transactionService.findByAccountId(getById(accountId).getId());
+    }
+
+    // Balance changes and their transaction records always happen together
+    Transaction deposit(Account account, BigDecimal amount, String note) {
+        BigDecimal money = amount.setScale(2, RoundingMode.UNNECESSARY);
+        account.deposit(money);
+        return transactionService.recordTransaction(account, TransactionType.CREDIT, money, note);
+    }
+
+    Transaction withdraw(Account account, BigDecimal amount, String note) {
+        BigDecimal money = amount.setScale(2, RoundingMode.UNNECESSARY);
+        account.withdraw(money);
+        return transactionService.recordTransaction(account, TransactionType.DEBIT, money, note);
     }
 
     private String generateDemoIban(long accountId) {

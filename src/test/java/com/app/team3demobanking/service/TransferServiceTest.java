@@ -1,6 +1,7 @@
 
 package com.app.team3demobanking.service;
 
+import com.app.team3demobanking.exception.InsufficientFundsException;
 import com.app.team3demobanking.exception.InvalidTransferException;
 import com.app.team3demobanking.exception.NotFoundException;
 import com.app.team3demobanking.model.Account;
@@ -12,14 +13,11 @@ import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 class TransferServiceTest {
 
-    private AccountService accountService;
     private TransactionService transactionService;
     private TransferService transferService;
 
@@ -28,47 +26,23 @@ class TransferServiceTest {
 
     @BeforeEach
     void setUp() {
-        accountService = mock(AccountService.class);
-        transactionService = mock(TransactionService.class);
+        transactionService = new TransactionService();
+        AccountService accountService = new AccountService(transactionService);
 
-        transferService = new TransferService(
-                accountService, transactionService);
+        transferService = new TransferService(accountService);
 
-        sender = new Account(1L, "LV01TEST", "Alice");
-        sender.setBalance(new BigDecimal("500.00"));
+        sender = accountService.createAccount(
+                "Alice", new BigDecimal("500.00"));
 
-        receiver = new Account(2L, "LV02TEST", "Bob");
-        receiver.setBalance(new BigDecimal("200.00"));
-
-        when(accountService.findById(1L))
-                .thenReturn(Optional.of(sender));
-
-        when(accountService.findById(2L))
-                .thenReturn(Optional.of(receiver));
+        receiver = accountService.createAccount(
+                "Bob", new BigDecimal("200.00"));
     }
 
     @Test
     void shouldTransferMoneySuccessfully() {
-        BigDecimal amount = new BigDecimal("100.00");
-
-        Transaction debit = new Transaction(
-                1L, sender, TransactionType.DEBIT,
-                amount, "Rent");
-
-        Transaction credit = new Transaction(
-                2L, receiver, TransactionType.CREDIT,
-                amount, "Rent");
-
-        when(transactionService.recordTransaction(
-                sender, TransactionType.DEBIT, amount, "Rent"))
-                .thenReturn(debit);
-
-        when(transactionService.recordTransaction(
-                receiver, TransactionType.CREDIT, amount, "Rent"))
-                .thenReturn(credit);
-
         List<Transaction> result = transferService.transfer(
-                1L, 2L, amount, "Rent");
+                sender.getId(), receiver.getId(),
+                new BigDecimal("100"), "Rent");
 
         assertEquals(
                 new BigDecimal("400.00"), sender.getBalance());
@@ -80,16 +54,23 @@ class TransferServiceTest {
         assertEquals(TransactionType.DEBIT, result.get(0).getType());
         assertEquals(TransactionType.CREDIT, result.get(1).getType());
 
-        verify(transactionService, times(2))
-                .recordTransaction(any(), any(), any(), any());
+        // Amounts are stored with 2 decimals, like balances
+        assertEquals(new BigDecimal("100.00"), result.get(0).getAmount());
+
+        // Initial balance plus one transfer leg on each side
+        assertEquals(2, transactionService
+                .findByAccountId(sender.getId()).size());
+
+        assertEquals(2, transactionService
+                .findByAccountId(receiver.getId()).size());
     }
 
     @Test
     void shouldRejectInsufficientBalance() {
-        InvalidTransferException exception = assertThrows(
-                InvalidTransferException.class,
+        InsufficientFundsException exception = assertThrows(
+                InsufficientFundsException.class,
                 () -> transferService.transfer(
-                        1L, 2L,
+                        sender.getId(), receiver.getId(),
                         new BigDecimal("600.00"), "Payment"));
 
         assertEquals("Insufficient balance",
@@ -98,7 +79,10 @@ class TransferServiceTest {
         assertEquals(
                 new BigDecimal("500.00"), sender.getBalance());
 
-        verifyNoInteractions(transactionService);
+        assertEquals(
+                new BigDecimal("200.00"), receiver.getBalance());
+
+        assertNoTransferRecorded();
     }
 
     @Test
@@ -106,13 +90,13 @@ class TransferServiceTest {
         InvalidTransferException exception = assertThrows(
                 InvalidTransferException.class,
                 () -> transferService.transfer(
-                        1L, 2L,
+                        sender.getId(), receiver.getId(),
                         new BigDecimal("-50.00"), "Payment"));
 
         assertEquals("Invalid transfer details",
                 exception.getMessage());
 
-        verifyNoInteractions(transactionService);
+        assertNoTransferRecorded();
     }
 
     @Test
@@ -120,13 +104,13 @@ class TransferServiceTest {
         InvalidTransferException exception = assertThrows(
                 InvalidTransferException.class,
                 () -> transferService.transfer(
-                        1L, 2L,
+                        sender.getId(), receiver.getId(),
                         BigDecimal.ZERO, "Payment"));
 
         assertEquals("Invalid transfer details",
                 exception.getMessage());
 
-        verifyNoInteractions(transactionService);
+        assertNoTransferRecorded();
     }
 
     @Test
@@ -134,29 +118,35 @@ class TransferServiceTest {
         InvalidTransferException exception = assertThrows(
                 InvalidTransferException.class,
                 () -> transferService.transfer(
-                        1L, 1L,
+                        sender.getId(), sender.getId(),
                         new BigDecimal("100.00"), "Payment"));
 
         assertEquals("Cannot transfer to the same account",
                 exception.getMessage());
 
-        verifyNoInteractions(transactionService);
+        assertNoTransferRecorded();
     }
 
     @Test
     void shouldRejectMissingAccount() {
-        when(accountService.findById(99L))
-                .thenReturn(Optional.empty());
-
         NotFoundException exception = assertThrows(
                 NotFoundException.class,
                 () -> transferService.transfer(
-                        1L, 99L,
+                        sender.getId(), 99L,
                         new BigDecimal("100.00"), "Payment"));
 
         assertEquals("Receiver account not found",
                 exception.getMessage());
 
-        verifyNoInteractions(transactionService);
+        assertNoTransferRecorded();
+    }
+
+    // Only the initial balances from setUp exist
+    private void assertNoTransferRecorded() {
+        assertEquals(1, transactionService
+                .findByAccountId(sender.getId()).size());
+
+        assertEquals(1, transactionService
+                .findByAccountId(receiver.getId()).size());
     }
 }

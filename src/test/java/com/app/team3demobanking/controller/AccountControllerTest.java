@@ -2,8 +2,9 @@ package com.app.team3demobanking.controller;
 
 import com.app.team3demobanking.exception.NotFoundException;
 import com.app.team3demobanking.model.Account;
+import com.app.team3demobanking.model.Transaction;
+import com.app.team3demobanking.model.TransactionType;
 import com.app.team3demobanking.service.AccountService;
-import com.app.team3demobanking.service.TransactionService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +12,9 @@ import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+
+import java.math.BigDecimal;
+import java.util.List;
 
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -27,9 +31,6 @@ class AccountControllerTest {
 
     @MockitoBean
     private AccountService accountService;
-
-    @MockitoBean
-    private TransactionService transactionService;
 
     @Test
     @DisplayName("POST /account creates an account and returns 201")
@@ -61,5 +62,19 @@ class AccountControllerTest {
 
         mockMvc.perform(get("/account/999"))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("GET /account/{id}/transactions returns the account's transactions")
+    void shouldReturnAccountTransactions() throws Exception {
+        Account account = new Account(1L, "LV00TEST0000000000001", "Alice");
+        Transaction transaction = new Transaction(
+                1L, account, TransactionType.CREDIT, new BigDecimal("500.00"), "Salary");
+        when(accountService.getTransactions(1L)).thenReturn(List.of(transaction));
+
+        mockMvc.perform(get("/account/1/transactions"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].accountId").value(1))
+                .andExpect(jsonPath("$[0].type").value("CREDIT"));
     }
 }

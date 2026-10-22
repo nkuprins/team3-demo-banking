@@ -5,7 +5,6 @@ import com.app.team3demobanking.exception.InvalidTransferException;
 import com.app.team3demobanking.exception.NotFoundException;
 import com.app.team3demobanking.model.Account;
 import com.app.team3demobanking.model.Transaction;
-import com.app.team3demobanking.model.TransactionType;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,7 +17,6 @@ import java.util.List;
 public class TransferService {
 
     private final AccountService accountService;
-    private final TransactionService transactionService;
 
     public synchronized List<Transaction> transfer(
             Long fromAccountId,
@@ -48,26 +46,12 @@ public class TransferService {
                 .orElseThrow(() -> new NotFoundException(
                         "Receiver account not found"));
 
-        // Check available balance
-        if (sender.getBalance().compareTo(amount) < 0) {
-            throw new InvalidTransferException(
-                    "Insufficient balance");
-        }
+        // Withdraw first: it fails before anything changes if the balance is too low
+        Transaction debit = accountService.withdraw(
+                sender, amount, note);
 
-        // Update account balances
-        sender.setBalance(
-                sender.getBalance().subtract(amount));
-
-        receiver.setBalance(
-                receiver.getBalance().add(amount));
-
-        // Record outgoing transaction
-        Transaction debit = transactionService.recordTransaction(
-                sender, TransactionType.DEBIT, amount, note);
-
-        // Record incoming transaction
-        Transaction credit = transactionService.recordTransaction(
-                receiver, TransactionType.CREDIT, amount, note);
+        Transaction credit = accountService.deposit(
+                receiver, amount, note);
 
         return List.of(debit, credit);
     }

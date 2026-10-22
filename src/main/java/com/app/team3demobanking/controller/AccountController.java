@@ -5,7 +5,6 @@ import com.app.team3demobanking.dto.CreateAccountRequest;
 import com.app.team3demobanking.dto.TransactionResponse;
 import com.app.team3demobanking.model.Account;
 import com.app.team3demobanking.service.AccountService;
-import com.app.team3demobanking.service.TransactionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -24,7 +23,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AccountController {
     private final AccountService accountService;
-    private final TransactionService transactionService;
 
     @PostMapping
     public ResponseEntity<AccountResponse> createAccount(@Valid @RequestBody CreateAccountRequest request) {
@@ -40,8 +38,7 @@ public class AccountController {
 
     @GetMapping("/{id}/transactions")
     public List<TransactionResponse> getAccountTransactions(@PathVariable Long id) {
-        Account account = accountService.getById(id);
-        return transactionService.findByAccountId(account.getId()).stream()
+        return accountService.getTransactions(id).stream()
                 .map(TransactionResponse::from)
                 .toList();
     }

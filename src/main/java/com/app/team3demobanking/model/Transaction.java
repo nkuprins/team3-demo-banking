@@ -1,12 +1,16 @@
 package com.app.team3demobanking.model;
 
-import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.ToString;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 
-@Data
+@Getter
+@RequiredArgsConstructor
+@ToString
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Transaction {
     @EqualsAndHashCode.Include
