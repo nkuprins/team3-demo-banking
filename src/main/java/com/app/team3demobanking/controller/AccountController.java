@@ -8,7 +8,6 @@ import com.app.team3demobanking.model.Transaction;
 import com.app.team3demobanking.service.AccountService;
 import com.app.team3demobanking.service.TransactionService;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -16,13 +15,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/account")
@@ -48,25 +44,16 @@ public class AccountController {
     }
 
     @GetMapping("/{id}")
-    public AccountResponse getAccountById(@PathVariable("id") Long id) {
-        Optional<Account> account = accountService.findById(id);
-        if (!account.isPresent()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found");
-        }
-        return toResponse(account.get());
+    public AccountResponse getAccountById(@PathVariable Long id) {
+        return toResponse(accountService.getById(id));
     }
 
     @GetMapping("/{id}/transactions")
-    public List<TransactionResponse> getAccountTransactions(@PathVariable("id") Long id) {
-        if (!accountService.findById(id).isPresent()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found");
-        }
-
-        List<TransactionResponse> responses = new ArrayList<>();
-        for (Transaction transaction : transactionService.findByAccountId(id)) {
-            responses.add(toTransactionResponse(transaction));
-        }
-        return responses;
+    public List<TransactionResponse> getAccountTransactions(@PathVariable Long id) {
+        Account account = accountService.getById(id);
+        return transactionService.findByAccountId(account.getId()).stream()
+                .map(this::toTransactionResponse)
+                .toList();
     }
 
     private AccountResponse toResponse(Account account) {
