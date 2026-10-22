@@ -28,7 +28,7 @@ public class AccountController {
 
     @PostMapping
     public ResponseEntity<AccountResponse> createAccount(@Valid @RequestBody CreateAccountRequest request) {
-        Account account = accountService.createAccount(request.ownerName());
+        Account account = accountService.createAccount(request.ownerName(), request.initialBalance());
         return ResponseEntity.created(URI.create("/account/" + account.getId()))
                 .body(AccountResponse.from(account));
     }
