@@ -37,7 +37,7 @@ public class AccountController {
 
     @PostMapping
     public ResponseEntity<AccountResponse> createAccount(@Valid @RequestBody CreateAccountRequest request) {
-        Account account = accountService.createAccount(request.getIban(), request.getOwnerName());
+        Account account = accountService.createAccount(request.iban(), request.ownerName());
         AccountResponse response = toResponse(account);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
