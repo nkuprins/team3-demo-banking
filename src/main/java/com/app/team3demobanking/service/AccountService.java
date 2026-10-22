@@ -1,5 +1,6 @@
 package com.app.team3demobanking.service;
 
+import com.app.team3demobanking.exception.NotFoundException;
 import com.app.team3demobanking.model.Account;
 import org.springframework.stereotype.Service;
 
@@ -28,6 +29,10 @@ public class AccountService {
 
     public Optional<Account> findById(Long id) {
         return Optional.ofNullable(accounts.get(id));
+    }
+
+    public Account getById(Long id) {
+        return findById(id).orElseThrow(() -> new NotFoundException("Account not found"));
     }
 
     private String generateDemoIban(long accountId) {

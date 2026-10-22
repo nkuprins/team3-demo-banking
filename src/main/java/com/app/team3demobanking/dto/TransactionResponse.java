@@ -1,5 +1,6 @@
 package com.app.team3demobanking.dto;
 
+import com.app.team3demobanking.model.Transaction;
 import com.app.team3demobanking.model.TransactionType;
 
 import java.math.BigDecimal;
@@ -13,4 +14,14 @@ public record TransactionResponse(
         Instant createdAt,
         String note
 ) {
+    public static TransactionResponse from(Transaction transaction) {
+        return new TransactionResponse(
+                transaction.getId(),
+                transaction.getAccount().getId(),
+                transaction.getType(),
+                transaction.getAmount(),
+                transaction.getCreatedAt(),
+                transaction.getNote()
+        );
+    }
 }
