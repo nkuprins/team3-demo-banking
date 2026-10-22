@@ -61,7 +61,7 @@ class TransferApiIntegrationTest {
                 .compareTo(new BigDecimal("100.00")));
 
         // Verify transaction history
-        assertEquals(1, transactionService
+        assertEquals(2, transactionService
                 .findByAccountId(alice.getId()).size());
 
         assertEquals(1, transactionService

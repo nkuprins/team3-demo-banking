@@ -2,6 +2,8 @@ package com.app.team3demobanking.service;
 
 import com.app.team3demobanking.exception.NotFoundException;
 import com.app.team3demobanking.model.Account;
+import com.app.team3demobanking.model.TransactionType;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -14,21 +16,32 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Service
+@RequiredArgsConstructor
 public class AccountService {
+
     private static final String DEMO_BANK_IDENTIFIER = "TEST";
     private static final long MAX_ACCOUNT_NUMBER = 9_999_999_999_999L;
     private static final BigInteger IBAN_CHECK_MODULUS = BigInteger.valueOf(97);
 
+
     private final Map<Long, Account> accounts = new ConcurrentHashMap<>();
     private final AtomicLong nextId = new AtomicLong(1);
+    private final TransactionService transactionService;
 
     public Account createAccount(String ownerName, BigDecimal initialBalance) {
         Long id = nextId.getAndIncrement();
         Account account = new Account(id, generateDemoIban(id), ownerName);
-        if (initialBalance != null) {
-            account.setBalance(initialBalance.setScale(2, RoundingMode.UNNECESSARY));
-        }
         accounts.put(id, account);
+
+        if (initialBalance != null) {
+            BigDecimal scaled = initialBalance.setScale(2, RoundingMode.UNNECESSARY);
+            account.setBalance(scaled);
+            if (scaled.signum() > 0) {
+                transactionService.recordTransaction(account, TransactionType.CREDIT, scaled, "Initinal balance");
+            }
+
+        }
+
         return account;
     }
 
