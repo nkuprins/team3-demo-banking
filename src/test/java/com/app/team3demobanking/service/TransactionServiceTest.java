@@ -21,7 +21,7 @@ class TransactionServiceTest {
     @BeforeEach
     void setUp() {
         service = new TransactionService();
-        account = new Account(1L, "LV00TEST0000000000001", "Alice", BigDecimal.ZERO);
+        account = new Account(1L, "LV00TEST0000000000001", "Alice");
     }
 
     @Test
@@ -54,7 +54,7 @@ class TransactionServiceTest {
     @Test
     @DisplayName("findByAccountId returns only that account's transactions")
     void shouldFindTransactionsByAccount() {
-        Account other = new Account(2L, "LV00TEST0000000000002", "Bob", BigDecimal.ZERO);
+        Account other = new Account(2L, "LV00TEST0000000000002", "Bob");
         service.recordTransaction(account, TransactionType.CREDIT, new BigDecimal("100"), "a");
         service.recordTransaction(account, TransactionType.DEBIT, new BigDecimal("50"), "b");
         service.recordTransaction(other, TransactionType.CREDIT, new BigDecimal("30"), "c");

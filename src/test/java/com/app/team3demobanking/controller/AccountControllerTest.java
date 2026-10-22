@@ -36,7 +36,7 @@ class AccountControllerTest {
     @Test
     @DisplayName("POST /account creates an account and returns 201")
     void shouldCreateAccount() throws Exception {
-        Account account = new Account(1L, "LV00TEST0000000000001", "Alice", BigDecimal.ZERO);
+        Account account = new Account(1L, "LV00TEST0000000000001", "Alice");
         when(accountService.createAccount("Alice")).thenReturn(account);
 
         mockMvc.perform(post("/account")
