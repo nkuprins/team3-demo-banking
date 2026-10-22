@@ -11,7 +11,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -35,13 +34,11 @@ class TransferServiceTest {
         transferService = new TransferService(
                 accountService, transactionService);
 
-        sender = new Account(
-                1L, "LV01TEST", "Alice",
-                new BigDecimal("500.00"));
+        sender = new Account(1L, "LV01TEST", "Alice");
+        sender.setBalance(new BigDecimal("500.00"));
 
-        receiver = new Account(
-                2L, "LV02TEST", "Bob",
-                new BigDecimal("200.00"));
+        receiver = new Account(2L, "LV02TEST", "Bob");
+        receiver.setBalance(new BigDecimal("200.00"));
 
         when(accountService.findById(1L))
                 .thenReturn(Optional.of(sender));
@@ -56,11 +53,11 @@ class TransferServiceTest {
 
         Transaction debit = new Transaction(
                 1L, sender, TransactionType.DEBIT,
-                amount, Instant.now(), "Rent");
+                amount, "Rent");
 
         Transaction credit = new Transaction(
                 2L, receiver, TransactionType.CREDIT,
-                amount, Instant.now(), "Rent");
+                amount, "Rent");
 
         when(transactionService.recordTransaction(
                 sender, TransactionType.DEBIT, amount, "Rent"))
