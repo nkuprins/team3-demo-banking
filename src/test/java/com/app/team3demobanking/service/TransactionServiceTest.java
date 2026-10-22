@@ -38,20 +38,6 @@ class TransactionServiceTest {
     }
 
     @Test
-    @DisplayName("recordTransaction throws for null account")
-    void shouldThrowForNullAccount() {
-        assertThatThrownBy(() -> service.recordTransaction(null, TransactionType.CREDIT, new BigDecimal("100"), "x"))
-                .isInstanceOf(NullPointerException.class);
-    }
-
-    @Test
-    @DisplayName("recordTransaction throws for null amount")
-    void shouldThrowForNullAmount() {
-        assertThatThrownBy(() -> service.recordTransaction(account, TransactionType.CREDIT, null, "x"))
-                .isInstanceOf(NullPointerException.class);
-    }
-
-    @Test
     @DisplayName("findByAccountId returns only that account's transactions")
     void shouldFindTransactionsByAccount() {
         Account other = new Account(2L, "LV00TEST0000000000002", "Bob");

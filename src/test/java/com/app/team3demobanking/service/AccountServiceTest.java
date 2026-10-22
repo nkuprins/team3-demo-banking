@@ -1,5 +1,6 @@
 package com.app.team3demobanking.service;
 
+import com.app.team3demobanking.exception.NotFoundException;
 import com.app.team3demobanking.model.Account;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -12,6 +13,7 @@ import java.math.BigDecimal;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("AccountServiceTest")
@@ -39,6 +41,13 @@ class AccountServiceTest {
         Account account = service.createAccount("Alice", new BigDecimal("500"));
 
         assertThat(account.getBalance()).isEqualTo(new BigDecimal("500.00"));
+    }
+
+    @Test
+    @DisplayName("getTransactions throws when the account does not exist")
+    void shouldThrowForTransactionsOfMissingAccount() {
+        assertThatThrownBy(() -> service.getTransactions(999L))
+                .isInstanceOf(NotFoundException.class);
     }
 
     @Test
