@@ -6,7 +6,6 @@ import com.app.team3demobanking.model.TransactionType;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -30,7 +29,6 @@ public class TransactionService {
                 account,
                 type,
                 amount,
-                Instant.now(),
                 note
         );
         transactions.put(transaction.getId(), transaction);

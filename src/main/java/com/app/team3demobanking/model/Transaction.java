@@ -1,20 +1,19 @@
 package com.app.team3demobanking.model;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.EqualsAndHashCode;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Transaction {
-    private Long id;
-    private Account account;
-    private TransactionType type;
-    private BigDecimal amount;
-    private Instant createdAt;
-    private String note;
+    @EqualsAndHashCode.Include
+    private final Long id;
+    private final Account account;
+    private final TransactionType type;
+    private final BigDecimal amount;
+    private final Instant createdAt = Instant.now();
+    private final String note;
 }

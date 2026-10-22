@@ -1,17 +1,19 @@
 package com.app.team3demobanking.model;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 import java.math.BigDecimal;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Account {
-    private Long id;
-    private String iban;
-    private String ownerName;
-    private BigDecimal balance;
+    @EqualsAndHashCode.Include
+    private final Long id;
+    @ToString.Exclude
+    private final String iban;
+    @ToString.Exclude
+    private final String ownerName;
+    private BigDecimal balance = new BigDecimal("0.00");
 }
