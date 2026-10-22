@@ -23,7 +23,7 @@ class AccountServiceTest {
     @Test
     @DisplayName("createAccount stores the account with id, owner and zero balance")
     void shouldCreateAccount() {
-        Account account = service.createAccount("Alice");
+        Account account = service.createAccount("Alice", null);
         assertThat(account.getId()).isNotNull();
         assertThat(account.getOwnerName()).isEqualTo("Alice");
         assertThat(account.getBalance()).isEqualByComparingTo(BigDecimal.ZERO);
@@ -31,18 +31,26 @@ class AccountServiceTest {
     }
 
     @Test
+    @DisplayName("createAccount sets the initial balance with 2 decimal places")
+    void shouldCreateAccountWithInitialBalance() {
+        Account account = service.createAccount("Alice", new BigDecimal("500"));
+
+        assertThat(account.getBalance()).isEqualTo(new BigDecimal("500.00"));
+    }
+
+    @Test
     @DisplayName("createAccount gives each account a different id")
     void shouldAssignUniqueIds() {
-        Account first = service.createAccount("Alice");
-        Account second = service.createAccount("Bob");
+        Account first = service.createAccount("Alice", null);
+        Account second = service.createAccount("Bob", null);
 
         assertThat(first.getId()).isNotEqualTo(second.getId());
     }
 
     @Test
     @DisplayName("findById returns the account when it exists")
-    void shoudldFindExistingAccounts() {
-        Account created = service.createAccount("Alice");
+    void shouldFindExistingAccounts() {
+        Account created = service.createAccount("Alice", null);
 
         Optional<Account> found = service.findById(created.getId());
 

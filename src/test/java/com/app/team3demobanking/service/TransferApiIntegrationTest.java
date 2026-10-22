@@ -31,12 +31,9 @@ class TransferApiIntegrationTest {
     @Test
     void shouldTransferMoneyThroughApi() throws Exception {
 
-        // Create two test accounts
-        Account alice = accountService.createAccount("Alice");
-        Account bob = accountService.createAccount("Bob");
-
-        // Give Alice a test balance
-        alice.setBalance(new BigDecimal("500.00"));
+        // Create two test accounts, Alice with a starting balance
+        Account alice = accountService.createAccount("Alice", new BigDecimal("500.00"));
+        Account bob = accountService.createAccount("Bob", null);
 
         // Prepare transfer request
         String request = """

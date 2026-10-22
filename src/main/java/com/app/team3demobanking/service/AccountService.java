@@ -4,7 +4,9 @@ import com.app.team3demobanking.exception.NotFoundException;
 import com.app.team3demobanking.model.Account;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
@@ -20,9 +22,12 @@ public class AccountService {
     private final Map<Long, Account> accounts = new ConcurrentHashMap<>();
     private final AtomicLong nextId = new AtomicLong(1);
 
-    public Account createAccount(String ownerName) {
+    public Account createAccount(String ownerName, BigDecimal initialBalance) {
         Long id = nextId.getAndIncrement();
         Account account = new Account(id, generateDemoIban(id), ownerName);
+        if (initialBalance != null) {
+            account.setBalance(initialBalance.setScale(2, RoundingMode.UNNECESSARY));
+        }
         accounts.put(id, account);
         return account;
     }
